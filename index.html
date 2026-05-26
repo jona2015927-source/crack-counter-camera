@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>裂縫計數相機</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; width: 100vw; height: 100vh; overflow: hidden; font-family: 'Courier New', monospace; touch-action: manipulation; }
+#camera-container { position: relative; width: 100vw; height: 100vh; }
+#video { width: 100%; height: 100%; object-fit: cover; display: block; }
+#canvas-hidden { display: none; }
+#number-overlay { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.75); border: 3px solid #fff; border-radius: 12px; padding: 8px 20px; z-index: 10; pointer-events: none; min-width: 90px; text-align: center; }
+#number-label { color: #aaa; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+#number-display { color: #fff; font-size: 72px; font-weight: 900; line-height: 1; letter-spacing: -2px; font-family: 'Courier New', monospace; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+#controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 20px; z-index: 10; }
+.count-btn { width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.8); background: rgba(0,0,0,0.5); color: #fff; font-size: 32px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; user-select: none; }
+.count-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
+#btn-capture { width: 80px; height: 80px; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,0.2); cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent; flex-shrink: 0; }
+#btn-capture::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: #fff; }
+#btn-capture:active::after { background: #ccc; inset: 10px; }
+#btn-reset { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.5); border-radius: 8px; color: rgba(255,255,255,0.7); font-size: 12px; padding: 6px 12px; cursor: pointer; z-index: 10; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.05s; }
+#flash.active { opacity: 0.8; }
+#shot-count { position: absolute; bottom: 130px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.6); font-size: 12px; letter-spacing: 2px; z-index: 10; }
+#start-screen { position: absolute; inset: 0; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 30; gap: 24px; }
+#start-screen h1 { color: #fff; font-size: 22px; letter-spacing: 3px; }
+#start-screen p { color: #888; font-size: 14px; text-align: center; line-height: 1.8; padding: 0 40px; }
+#btn-start { background: #fff; color: #000; border: none; border-radius: 40px; padding: 16px 48px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 2px; }
+#btn-flip { position: absolute; bottom: 52px; right: 40px; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; width: 44px; height: 44px; color: #fff; font-size: 20px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; }
+#preview-bar { position: absolute; bottom: 130px; left: 0; right: 0; display: flex; gap: 8px; padding: 0 16px; overflow-x: auto; z-index: 10; scrollbar-width: none; }
+.preview-thumb { flex-shrink: 0; width: 52px; height: 52px; border-radius: 6px; object-fit: cover; border: 2px solid rgba(255,255,255,0.6); cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="start-screen">
+  <h1>裂縫計數相機</h1>
+  <p>按下開始後授權相機權限<br>使用 - + 調整裂縫數量<br>中間圓鈕拍照</p>
+  <button id="btn-start" onclick="startCamera()">開始使用</button>
+</div>
+<div id="camera-container">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas-hidden"></canvas>
+  <div id="flash"></div>
+  <div id="number-overlay">
+    <span id="number-label">裂縫數</span>
+    <div id="number-display">0</div>
+  </div>
+  <button id="btn-reset" onclick="resetCount()">歸零</button>
+  <button id="btn-flip" onclick="flipCamera()">🔄</button>
+  <div id="preview-bar"></div>
+  <div id="shot-count">尚未拍攝</div>
+  <div id="controls">
+    <button class="count-btn" id="btn-minus" onclick="changeCount(-1)">-</button>
+    <button id="btn-capture" onclick="capturePhoto()"></button>
+    <button class="count-btn" id="btn-plus" onclick="changeCount(1)">+</button>
+  </div>
+</div>
+<script>
+let count=0,shotsTaken=0,stream=null,facingMode='environment',photos=[];
+function updateDisplay(){document.getElementById('number-display').textContent=count;}
+function changeCount(d){count=Math.max(0,count+d);updateDisplay();}
+function resetCount(){count=0;updateDisplay();}
+async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false});document.getElementById('video').srcObject=stream;document.getElementById('start-screen').style.display='none';}catch(e){alert('無法存取相機：'+e.message);}}
+async function flipCamera(){facingMode=facingMode==='environment'?'user':'environment';if(stream)stream.getTracks().forEach(t=>t.stop());try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode},audio:false});document.getElementById('video').srcObject=stream;}catch(e){alert('切換失敗');}}
+function capturePhoto(){const v=document.getElementById('video'),c=document.getElementById('canvas-hidden'),x=c.getContext('2d');c.width=v.videoWidth||1280;c.height=v.videoHeight||720;x.drawImage(v,0,0,c.width,c.height);const bW=200,bH=110,bX=24,bY=24,r=14;x.fillStyle='rgba(0,0,0,0.72)';rr(x,bX,bY,bW,bH,r);x.fill();x.strokeStyle='#fff';x.lineWidth=4;rr(x,bX,bY,bW,bH,r);x.stroke();x.fillStyle='#aaa';x.font='bold 18px Courier New';x.textAlign='center';x.fillText('裂縫數',bX+bW/2,bY+28);x.fillStyle='#fff';x.font='bold 72px Courier New';x.fillText(String(count),bX+bW/2,bY+96);const f=document.getElementById('flash');f.classList.add('active');setTimeout(()=>f.classList.remove('active'),150);const d=c.toDataURL('image/jpeg',0.92);photos.push({d,count});shotsTaken++;addPreview(d,count);document.getElementById('shot-count').textContent='已拍 '+shotsTaken+' 張';const a=document.createElement('a');a.href=d;a.download='crack_'+String(count).padStart(2,'0')+'_'+Date.now()+'.jpg';a.click();}
+function addPreview(d,n){const b=document.getElementById('preview-bar'),i=document.createElement('img');i.src=d;i.className='preview-thumb';i.title='裂縫數：'+n;i.onclick=()=>window.open(d,'_blank');b.appendChild(i);b.scrollLeft=b.scrollWidth;}
+function rr(x,px,py,w,h,r){x.beginPath();x.moveTo(px+r,py);x.lineTo(px+w-r,py);x.quadraticCurveTo(px+w,py,px+w,py+r);x.lineTo(px+w,py+h-r);x.quadraticCurveTo(px+w,py+h,px+w-r,py+h);x.lineTo(px+r,py+h);x.quadraticCurveTo(px,py+h,px,py+h-r);x.lineTo(px,py+r);x.quadraticCurveTo(px,py,px+r,py);x.closePath();}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='+')changeCount(1);if(e.key==='ArrowDown'||e.key==='-')changeCount(-1);if(e.key===' ')capturePhoto();if(e.key==='0')resetCount();});
+</script>
+</body>
+</html>
