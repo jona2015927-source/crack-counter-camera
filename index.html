@@ -6,14 +6,8 @@
 <title>裂縫調查相機</title>
 <style>
   :root {
-    --bg: #0a0a0f;
-    --panel: rgba(15,15,25,0.92);
-    --border: rgba(255,255,255,0.12);
-    --accent: #00e5ff;
-    --accent2: #ff6b35;
-    --text: #f0f0f0;
-    --muted: #888;
-    --active-bg: rgba(0,229,255,0.15);
+    --bg:#0a0a0f; --panel:rgba(15,15,25,0.92); --border:rgba(255,255,255,0.12);
+    --accent:#00e5ff; --accent2:#ff6b35; --text:#f0f0f0; --muted:#888; --active-bg:rgba(0,229,255,0.15);
   }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body { background:#000; width:100vw; height:100vh; overflow:hidden; font-family:'SF Mono','Courier New',monospace; touch-action:manipulation; user-select:none; }
@@ -21,190 +15,42 @@
   #canvas-hidden { display:none; }
   #flash { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:50; transition:opacity 0.05s; }
   #flash.on { opacity:0.9; }
-
-  /* START SCREEN */
-  #start-screen {
-    position:absolute; inset:0; background:var(--bg);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    z-index:100; gap:20px;
-  }
+  #start-screen { position:absolute; inset:0; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; gap:20px; }
   #start-screen h1 { color:var(--accent); font-size:20px; letter-spacing:4px; text-transform:uppercase; }
   #start-screen p { color:var(--muted); font-size:13px; text-align:center; line-height:2; padding:0 40px; }
-  #btn-start {
-    background:var(--accent); color:#000; border:none; border-radius:32px;
-    padding:14px 44px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:2px;
-    font-family:inherit;
-  }
-
-  /* TOP HUD - compact single row */
-  #hud {
-    position:absolute; top:0; left:0; right:0;
-    z-index:20;
-    padding: env(safe-area-inset-top, 10px) 10px 0;
-  }
-  #hud-inner {
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-    padding: 6px 8px;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
-  }
-  .field-block {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:2px;
-    padding: 4px 2px;
-    border-radius:8px;
-    border: 1px solid transparent;
-    transition: all 0.15s;
-  }
-  .field-block.active {
-    border-color: var(--accent);
-    background: var(--active-bg);
-  }
-  .field-label {
-    color:var(--muted);
-    font-size:8px;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    font-weight:600;
-    white-space:nowrap;
-  }
+  #btn-start { background:var(--accent); color:#000; border:none; border-radius:32px; padding:14px 44px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:2px; font-family:inherit; }
+  #hud { position:absolute; top:0; left:0; right:0; z-index:20; padding:env(safe-area-inset-top,10px) 10px 0; }
+  #hud-inner { background:rgba(0,0,0,0.65); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--border); padding:6px 8px; display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+  .field-block { display:flex; flex-direction:column; align-items:center; gap:2px; padding:4px 2px; border-radius:8px; border:1px solid transparent; transition:all 0.15s; }
+  .field-block.active { border-color:var(--accent); background:var(--active-bg); }
+  .field-label { color:var(--muted); font-size:8px; letter-spacing:1px; text-transform:uppercase; font-weight:600; white-space:nowrap; }
   .field-block.active .field-label { color:var(--accent); }
-  .field-row {
-    display:flex;
-    align-items:center;
-    gap:3px;
-    width:100%;
-  }
-  .field-value {
-    color:var(--text);
-    font-size:11px;
-    font-weight:700;
-    flex:1;
-    text-align:center;
-    min-width:0;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    line-height:1.2;
-  }
-  .mini-btn {
-    width:20px; height:20px;
-    border-radius:50%;
-    border:1px solid rgba(255,255,255,0.25);
-    background:rgba(255,255,255,0.08);
-    color:#fff;
-    font-size:14px;
-    font-weight:700;
-    cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
-    transition:all 0.1s;
-    line-height:1;
-  }
+  .field-row { display:flex; align-items:center; gap:3px; width:100%; }
+  .field-value { color:var(--text); font-size:11px; font-weight:700; flex:1; text-align:center; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.2; }
+  .mini-btn { width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.1s; line-height:1; }
   .mini-btn:active { background:rgba(0,229,255,0.4); border-color:var(--accent); transform:scale(0.88); }
-
-  /* BOTTOM */
-  #bottom {
-    position:absolute; bottom:0; left:0; right:0;
-    z-index:20;
-    padding: 0 12px env(safe-area-inset-bottom, 16px);
-    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
-  }
-
-  /* preview bar */
-  #preview-bar {
-    display:flex; gap:6px; overflow-x:auto; margin-bottom:8px;
-    scrollbar-width:none; padding:4px 0;
-  }
+  #bottom { position:absolute; bottom:0; left:0; right:0; z-index:20; padding:0 12px env(safe-area-inset-bottom,16px); background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%); }
+  #preview-bar { display:flex; gap:6px; overflow-x:auto; margin-bottom:8px; scrollbar-width:none; padding:4px 0; }
   #preview-bar::-webkit-scrollbar { display:none; }
-  .thumb {
-    flex-shrink:0; width:44px; height:44px;
-    border-radius:6px; object-fit:cover;
-    border:2px solid rgba(255,255,255,0.4);
-    cursor:pointer;
-    position:relative;
-  }
-
-  /* save toast */
-  #toast {
-    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    background:rgba(0,229,255,0.15);
-    border:1px solid var(--accent);
-    color:var(--accent);
-    padding:12px 24px; border-radius:12px;
-    font-size:13px; font-weight:700; letter-spacing:1px;
-    opacity:0; pointer-events:none; z-index:60;
-    transition:opacity 0.2s;
-    white-space:nowrap;
-  }
+  .thumb { flex-shrink:0; width:44px; height:44px; border-radius:6px; object-fit:cover; border:2px solid rgba(255,255,255,0.4); cursor:pointer; }
+  #toast { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,229,255,0.15); border:1px solid var(--accent); color:var(--accent); padding:12px 24px; border-radius:12px; font-size:13px; font-weight:700; letter-spacing:1px; opacity:0; pointer-events:none; z-index:60; transition:opacity 0.2s; white-space:nowrap; }
   #toast.show { opacity:1; }
-
-  /* long-press save hint */
-  #save-hint {
-    text-align:center; color:rgba(255,255,255,0.45); font-size:10px;
-    letter-spacing:1px; margin-bottom:6px;
-  }
-
-  #shot-info {
-    text-align:center; color:var(--muted); font-size:10px;
-    letter-spacing:1px; margin-bottom:8px;
-  }
-
-  /* shutter row */
-  #shutter-row {
-    display:flex; align-items:center; justify-content:center; gap:28px;
-    padding-bottom: 4px;
-  }
-  #btn-reset {
-    background:rgba(255,107,53,0.12);
-    border:1.5px solid rgba(255,107,53,0.4);
-    color:var(--accent2);
-    border-radius:8px; padding:8px 14px;
-    font-size:11px; cursor:pointer; letter-spacing:1px;
-    font-family:inherit;
-  }
+  #save-hint { text-align:center; color:rgba(255,255,255,0.45); font-size:10px; letter-spacing:1px; margin-bottom:6px; }
+  #shot-info { text-align:center; color:var(--muted); font-size:10px; letter-spacing:1px; margin-bottom:8px; }
+  #shutter-row { display:flex; align-items:center; justify-content:center; gap:28px; padding-bottom:4px; }
+  #btn-reset { background:rgba(255,107,53,0.12); border:1.5px solid rgba(255,107,53,0.4); color:var(--accent2); border-radius:8px; padding:8px 14px; font-size:11px; cursor:pointer; letter-spacing:1px; font-family:inherit; }
   #btn-reset:active { background:rgba(255,107,53,0.3); }
-
-  #btn-capture {
-    width:68px; height:68px; border-radius:50%;
-    border:4px solid #fff;
-    background:rgba(255,255,255,0.15);
-    cursor:pointer; position:relative; flex-shrink:0;
-  }
-  #btn-capture::after {
-    content:''; position:absolute; inset:5px;
-    border-radius:50%; background:#fff; transition:all 0.1s;
-  }
+  #btn-capture { width:68px; height:68px; border-radius:50%; border:4px solid #fff; background:rgba(255,255,255,0.15); cursor:pointer; position:relative; flex-shrink:0; }
+  #btn-capture::after { content:''; position:absolute; inset:5px; border-radius:50%; background:#fff; transition:all 0.1s; }
   #btn-capture:active::after { inset:9px; background:#ddd; }
-
-  #btn-flip {
-    width:42px; height:42px; border-radius:50%;
-    border:1.5px solid rgba(255,255,255,0.3);
-    background:rgba(255,255,255,0.08);
-    color:#fff; font-size:18px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-  }
+  #btn-flip { width:42px; height:42px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.08); color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
   #btn-flip:active { background:rgba(255,255,255,0.2); }
-
-  /* lightbox */
-  #lightbox {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92);
-    z-index:200; flex-direction:column; align-items:center; justify-content:center; gap:16px;
-  }
+  #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:200; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; }
   #lightbox.show { display:flex; }
-  #lightbox img { max-width:92vw; max-height:75vh; border-radius:8px; object-fit:contain; }
-  #lb-info { color:#fff; font-size:12px; text-align:center; line-height:1.8; }
+  #lightbox img { max-width:92vw; max-height:72vh; border-radius:8px; object-fit:contain; }
+  #lb-info { color:#fff; font-size:12px; text-align:center; line-height:1.8; white-space:pre-line; }
   #lb-btns { display:flex; gap:12px; }
-  .lb-btn {
-    padding:10px 24px; border-radius:8px; font-size:13px; font-weight:700;
-    cursor:pointer; border:none; font-family:inherit;
-  }
+  .lb-btn { padding:10px 24px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; border:none; font-family:inherit; }
   #lb-save { background:var(--accent); color:#000; }
   #lb-close { background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); }
 </style>
@@ -220,9 +66,8 @@
 <video id="video" autoplay playsinline muted></video>
 <canvas id="canvas-hidden"></canvas>
 <div id="flash"></div>
-<div id="toast">已拍攝，點縮圖儲存</div>
+<div id="toast"></div>
 
-<!-- LIGHTBOX -->
 <div id="lightbox">
   <img id="lb-img" src="" alt="">
   <div id="lb-info"></div>
@@ -232,53 +77,14 @@
   </div>
 </div>
 
-<!-- TOP HUD -->
-<div id="hud">
-  <div id="hud-inner">
-    <div class="field-block active" id="blk-0">
-      <span class="field-label">樓層</span>
-      <div class="field-row">
-        <button class="mini-btn" onclick="step(0,-1)">-</button>
-        <div class="field-value" id="val-0">1F</div>
-        <button class="mini-btn" onclick="step(0,1)">+</button>
-      </div>
-    </div>
-    <div class="field-block" id="blk-1">
-      <span class="field-label">數量</span>
-      <div class="field-row">
-        <button class="mini-btn" onclick="step(1,-1)">-</button>
-        <div class="field-value" id="val-1">0條</div>
-        <button class="mini-btn" onclick="step(1,1)">+</button>
-      </div>
-    </div>
-    <div class="field-block" id="blk-2">
-      <span class="field-label">方向</span>
-      <div class="field-row">
-        <button class="mini-btn" onclick="step(2,-1)">-</button>
-        <div class="field-value" id="val-2">無</div>
-        <button class="mini-btn" onclick="step(2,1)">+</button>
-      </div>
-    </div>
-    <div class="field-block" id="blk-3">
-      <span class="field-label">寬度</span>
-      <div class="field-row">
-        <button class="mini-btn" onclick="step(3,-1)">-</button>
-        <div class="field-value" id="val-3">無</div>
-        <button class="mini-btn" onclick="step(3,1)">+</button>
-      </div>
-    </div>
-    <div class="field-block" id="blk-4">
-      <span class="field-label">長度</span>
-      <div class="field-row">
-        <button class="mini-btn" onclick="step(4,-1)">-</button>
-        <div class="field-value" id="val-4">100以下</div>
-        <button class="mini-btn" onclick="step(4,1)">+</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="hud"><div id="hud-inner">
+  <div class="field-block active" id="blk-0"><span class="field-label">樓層</span><div class="field-row"><button class="mini-btn" onclick="step(0,-1)">-</button><div class="field-value" id="val-0">1F</div><button class="mini-btn" onclick="step(0,1)">+</button></div></div>
+  <div class="field-block" id="blk-1"><span class="field-label">數量</span><div class="field-row"><button class="mini-btn" onclick="step(1,-1)">-</button><div class="field-value" id="val-1">0條</div><button class="mini-btn" onclick="step(1,1)">+</button></div></div>
+  <div class="field-block" id="blk-2"><span class="field-label">方向</span><div class="field-row"><button class="mini-btn" onclick="step(2,-1)">-</button><div class="field-value" id="val-2">無</div><button class="mini-btn" onclick="step(2,1)">+</button></div></div>
+  <div class="field-block" id="blk-3"><span class="field-label">寬度</span><div class="field-row"><button class="mini-btn" onclick="step(3,-1)">-</button><div class="field-value" id="val-3">無</div><button class="mini-btn" onclick="step(3,1)">+</button></div></div>
+  <div class="field-block" id="blk-4"><span class="field-label">長度</span><div class="field-row"><button class="mini-btn" onclick="step(4,-1)">-</button><div class="field-value" id="val-4">100以下</div><button class="mini-btn" onclick="step(4,1)">+</button></div></div>
+</div></div>
 
-<!-- BOTTOM -->
 <div id="bottom">
   <div id="preview-bar"></div>
   <div id="save-hint">點縮圖可預覽並儲存</div>
@@ -298,31 +104,13 @@ const FIELDS=[
   {label:'裂縫寬度',opts:['無','0.1mm','0.2mm','0.3mm','0.3mm以上'],idx:0},
   {label:'裂縫長度',opts:['100cm以下','100cm以上'],idx:0}
 ];
-let activeField=0,stream=null,facingMode='environment',shotsTaken=0;
-let currentLbUrl='';
+let activeField=0,stream=null,facingMode='environment',shotsTaken=0,currentLbUrl='';
 
 function getVal(i){return FIELDS[i].opts[FIELDS[i].idx];}
+function renderAll(){FIELDS.forEach((f,i)=>{document.getElementById('val-'+i).textContent=getVal(i);document.getElementById('blk-'+i).classList.toggle('active',i===activeField);});}
+function step(fi,d){const f=FIELDS[fi];f.idx=(f.idx+d+f.opts.length)%f.opts.length;activeField=fi;renderAll();}
+function resetAll(){FIELDS[0].idx=4;FIELDS[1].idx=0;FIELDS[2].idx=0;FIELDS[3].idx=0;FIELDS[4].idx=0;renderAll();}
 
-function renderAll(){
-  FIELDS.forEach((f,i)=>{
-    document.getElementById('val-'+i).textContent=getVal(i);
-    document.getElementById('blk-'+i).classList.toggle('active',i===activeField);
-  });
-}
-
-function step(fi,d){
-  const f=FIELDS[fi];
-  f.idx=(f.idx+d+f.opts.length)%f.opts.length;
-  activeField=fi;
-  renderAll();
-}
-
-function resetAll(){
-  FIELDS[0].idx=4;FIELDS[1].idx=0;FIELDS[2].idx=0;FIELDS[3].idx=0;FIELDS[4].idx=0;
-  renderAll();
-}
-
-// CAMERA
 async function startCamera(){
   try{
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false});
@@ -334,38 +122,24 @@ async function startCamera(){
 async function flipCamera(){
   facingMode=facingMode==='environment'?'user':'environment';
   if(stream)stream.getTracks().forEach(t=>t.stop());
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false});
-    document.getElementById('video').srcObject=stream;
-  }catch(e){alert('切換失敗');}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false});document.getElementById('video').srcObject=stream;}
+  catch(e){alert('切換失敗');}
 }
 
-// 頁面回到前景時重啟相機（修復黑畫面）
 document.addEventListener('visibilitychange',async()=>{
-  if(document.visibilityState==='visible' && stream){
+  if(document.visibilityState==='visible'&&stream){
     const tracks=stream.getVideoTracks();
-    if(tracks.length===0||tracks[0].readyState==='ended'){
-      try{
-        stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false});
-        document.getElementById('video').srcObject=stream;
-      }catch(e){}
+    if(!tracks.length||tracks[0].readyState==='ended'){
+      try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false});document.getElementById('video').srcObject=stream;}catch(e){}
     }
   }
 });
 
-// CAPTURE - 不自動下載，改用 lightbox 儲存
 function capturePhoto(){
   const v=document.getElementById('video'),c=document.getElementById('canvas-hidden'),x=c.getContext('2d');
   c.width=v.videoWidth||1280;c.height=v.videoHeight||720;
   x.drawImage(v,0,0,c.width,c.height);
-
-  const lines=[
-    '樓層：'+getVal(0),
-    '數量：'+getVal(1),
-    '方向：'+getVal(2),
-    '寬度：'+getVal(3),
-    '長度：'+getVal(4)
-  ];
+  const lines=['樓層：'+getVal(0),'數量：'+getVal(1),'方向：'+getVal(2),'寬度：'+getVal(3),'長度：'+getVal(4)];
   const fs=Math.round(c.width*0.026),lh=Math.round(fs*1.55),pad=Math.round(fs*0.7);
   x.font='bold '+fs+'px Courier New,monospace';
   const mw=Math.max(...lines.map(l=>x.measureText(l).width));
@@ -375,72 +149,40 @@ function capturePhoto(){
   x.strokeStyle='rgba(255,255,255,0.7)';x.lineWidth=2;rr(x,bx,by,bw,bh,br);x.stroke();
   x.font='bold '+fs+'px Courier New,monospace';x.textAlign='left';
   lines.forEach((l,i)=>{
-    const y=by+pad+lh*(i+0.78);
-    const parts=l.split('：');
+    const y=by+pad+lh*(i+0.78),parts=l.split('：');
     x.fillStyle='rgba(0,229,255,0.7)';x.fillText(parts[0]+'：',bx+pad,y);
     const lw=x.measureText(parts[0]+'：').width;
-    x.fillStyle='#ffffff';x.fillText(parts[1],bx+pad+lw,y);
+    x.fillStyle='#fff';x.fillText(parts[1],bx+pad+lw,y);
   });
-
-  const fl=document.getElementById('flash');
-  fl.classList.add('on');setTimeout(()=>fl.classList.remove('on'),120);
-
+  const fl=document.getElementById('flash');fl.classList.add('on');setTimeout(()=>fl.classList.remove('on'),120);
   const dataUrl=c.toDataURL('image/jpeg',0.92);
-  shotsTaken++;
-  addThumb(dataUrl);
+  shotsTaken++;addThumb(dataUrl);
   document.getElementById('shot-info').textContent='已拍 '+shotsTaken+' 張・'+getVal(0)+' '+getVal(1);
-
-  // 顯示 toast，不跳出頁面
   showToast('已拍攝！點縮圖儲存');
 }
 
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2000);
-}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
 
 function addThumb(src){
-  const bar=document.getElementById('preview-bar');
-  const img=document.createElement('img');
-  img.src=src;img.className='thumb';
-  img.onclick=()=>openLightbox(src);
-  bar.appendChild(img);
-  bar.scrollLeft=bar.scrollWidth;
+  const bar=document.getElementById('preview-bar'),img=document.createElement('img');
+  img.src=src;img.className='thumb';img.onclick=()=>openLightbox(src);
+  bar.appendChild(img);bar.scrollLeft=bar.scrollWidth;
 }
 
-// LIGHTBOX
 function openLightbox(src){
   currentLbUrl=src;
   document.getElementById('lb-img').src=src;
-  // 顯示當前資訊
-  document.getElementById('lb-info').textContent=
-    getVal(0)+' ・ '+getVal(1)+' ・ '+getVal(2)+'
+  document.getElementById('lb-info').textContent=getVal(0)+' ・ '+getVal(1)+' ・ '+getVal(2)+'
 寬度 '+getVal(3)+' ・ 長度 '+getVal(4);
   document.getElementById('lightbox').classList.add('show');
 }
-
-function lbClose(){
-  document.getElementById('lightbox').classList.remove('show');
-}
-
+function lbClose(){document.getElementById('lightbox').classList.remove('show');}
 function lbSave(){
-  // 觸發下載（用戶點按鈕主動觸發，iOS 不會跳走）
-  const a=document.createElement('a');
-  a.href=currentLbUrl;
-  a.download='crack_'+getVal(0)+'_'+Date.now()+'.jpg';
-  a.click();
-  showToast('正在儲存...');
-  lbClose();
+  const a=document.createElement('a');a.href=currentLbUrl;a.download='crack_'+getVal(0)+'_'+Date.now()+'.jpg';a.click();
+  showToast('正在儲存...');lbClose();
 }
 
-function rr(x,px,py,w,h,r){
-  x.beginPath();x.moveTo(px+r,py);x.lineTo(px+w-r,py);x.quadraticCurveTo(px+w,py,px+w,py+r);
-  x.lineTo(px+w,py+h-r);x.quadraticCurveTo(px+w,py+h,px+w-r,py+h);
-  x.lineTo(px+r,py+h);x.quadraticCurveTo(px,py+h,px,py+h-r);
-  x.lineTo(px,py+r);x.quadraticCurveTo(px,py,px+r,py);x.closePath();
-}
+function rr(x,px,py,w,h,r){x.beginPath();x.moveTo(px+r,py);x.lineTo(px+w-r,py);x.quadraticCurveTo(px+w,py,px+w,py+r);x.lineTo(px+w,py+h-r);x.quadraticCurveTo(px+w,py+h,px+w-r,py+h);x.lineTo(px+r,py+h);x.quadraticCurveTo(px,py+h,px,py+h-r);x.lineTo(px,py+r);x.quadraticCurveTo(px,py,px+r,py);x.closePath();}
 
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowUp'){step(activeField,-1);e.preventDefault();}
